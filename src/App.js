@@ -1,25 +1,48 @@
-import logo from './logo.svg';
+import React from 'react'
+import store from './store'
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+    state = {
+        value: '',
+    }
+    componentDidMount() {
+        store.subscribe(() => {
+            this.forceUpdate()
+        })
+    }
+    handleConfirm = () => {
+        const { value } = this.state
+        if (value) {
+            const { dispatch } = store
+            dispatch({ type: 'ADD_TODO', payload: { text: value } })
+            this.setState({
+                value: ''
+            })
+        }
+    }
+    handleChange = (e) => {
+        this.setState({
+            value: e.target.value
+        })
+    }
+    render() {
+        const { value } = this.state
+        const { getState } = store
+        const todoList = getState()
+        return (
+            <div className="App">
+                <input value={value} onChange={this.handleChange} />
+                <button onClick={this.handleConfirm}>确定</button>
+                {(todoList || []).map((todoItem, index) => {
+                    const { text } = todoItem || {}
+                    return <div key={index}>
+                        内容： { text }
+                    </div>
+                })}
+            </div>
+          );
+    }
 }
 
 export default App;
