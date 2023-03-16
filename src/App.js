@@ -15,7 +15,13 @@ class App extends React.Component {
         const { value } = this.state;
         if (value) {
             const { dispatch } = store;
-            dispatch({ type: "ADD_TODO", payload: { text: value } });
+            // dispatch({ type: "ADD_TODO", payload: { text: value } });
+            // 使用redux-thunk 支持异步
+            dispatch((dispatch, getState) => {
+                setTimeout(() => {
+                    dispatch({ type: "ADD_TODO", payload: { text: value } });
+                }, 1000)
+            })
             dispatch({ type: "ADD", payload: 1 })
             this.setState({
                 value: "",

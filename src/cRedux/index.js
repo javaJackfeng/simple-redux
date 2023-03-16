@@ -1,7 +1,11 @@
-const createStore = (reducer) => {
+const createStore = (reducer, enhancer) => {
     let currentState
     let currentListeners = []
     let nextListeners = currentListeners
+
+    if (typeof enhancer === 'function') {
+        return enhancer(createStore)(reducer)
+    }
 
     const dispatch = (action) => {
         currentState = reducer(currentState, action)
@@ -65,7 +69,43 @@ const combineReducers = (reducers) => {
     }
 }
 
+const compose = (...funcs) => {
+    if (funcs.length === 0) {
+        return (arg) => arg
+    }
+
+    if (funcs.length === 1) {
+        return funcs[0]
+    }
+
+    return (...args) => {
+        return funcs.reduce((a, b) => {
+            return a(b(...args))
+        })
+    }
+}
+
+const applyMiddleware = (...middlewares) => {
+    return (createStore) => {
+        return (reducer) => {
+            const store = createStore(reducer)
+            let dispatch = store.dispatch
+            const middlewareApi = {
+                getState: store.getState,
+                dispatch: (action, ...args) => dispatch(action, ...args) 
+            }
+            const chain = middlewares.map((fn) => fn(middlewareApi))
+            dispatch = compose(...chain)(dispatch)
+            return {
+                ...store,
+                dispatch
+            }
+        }
+    }
+}
+
 export {
     createStore,
-    combineReducers
+    combineReducers,
+    applyMiddleware
 }
